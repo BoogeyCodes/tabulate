@@ -26,6 +26,21 @@ public sealed class TableRendererTests
     }
 
     [Fact]
+    public void MaxColumnWidth_truncates_long_cells_with_an_ellipsis()
+    {
+        List<List<string>> rows =
+        [
+            ["City"],
+            ["Rawalpindi"],
+        ];
+        var table = TableRenderer.Render(rows, new TableOptions { MaxColumnWidth = 5 });
+        var lines = table.Split('\n');
+
+        Assert.Equal("| City  |", lines[1]);
+        Assert.Equal("| Rawa… |", lines[3]); // "Rawalpindi" -> "Rawa…" (5 chars)
+    }
+
+    [Fact]
     public void Right_alignment_pads_on_the_left()
     {
         var options = new TableOptions { Alignments = [Alignment.Left, Alignment.Right, Alignment.Left] };

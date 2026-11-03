@@ -27,6 +27,9 @@ public sealed class TableOptions
 
     /// <summary>Per-column alignment. A shorter list is padded with Left; null means Left everywhere.</summary>
     public IReadOnlyList<Alignment>? Alignments { get; init; }
+
+    /// <summary>Maximum width of any cell; longer cells are truncated with an ellipsis. Null means no limit.</summary>
+    public int? MaxColumnWidth { get; init; }
 }
 
 /// <summary>Renders rows of cells into an aligned ASCII or Markdown table. Uses '\n' line endings.</summary>
@@ -40,6 +43,13 @@ public static class TableRenderer
         if (rows.Count == 0)
         {
             return string.Empty;
+        }
+
+        if (options.MaxColumnWidth is int max && max > 0)
+        {
+            rows = rows
+                .Select(r => (IReadOnlyList<string>)r.Select(cell => Truncate(cell, max)).ToList())
+                .ToList();
         }
 
         var columnCount = rows.Max(r => r.Count);
@@ -120,6 +130,10 @@ public static class TableRenderer
         Alignment.Center => ":" + new string('-', Math.Max(1, width - 2)) + ":",
         _ => new string('-', Math.Max(3, width)),
     };
+
+    /// <summary>Shorten text to <paramref name="max"/> characters, using a trailing ellipsis.</summary>
+    private static string Truncate(string text, int max) =>
+        text.Length <= max ? text : max <= 1 ? "…" : text[..(max - 1)] + "…";
 
     private static string Pad(string text, int width, Alignment align)
     {
